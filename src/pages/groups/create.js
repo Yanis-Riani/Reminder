@@ -7,6 +7,18 @@ import axios from 'axios';
 import styles from '../../styles/index.module.css';
 import Select from 'react-select';
 
+const customStyles = {
+  control: (provided) => ({
+    ...provided,
+    width: '100%',
+  }),
+  option: (provided, state) => ({
+    ...provided,
+    color: state.isSelected ? 'white' : 'black',
+    backgroundColor: state.isSelected ? 'black' : 'white',
+  }),
+};
+
 export default function CreateGroup() {
   const { data: session } = useSession();
   const [groupName, setGroupName] = useState('');
@@ -63,7 +75,7 @@ export default function CreateGroup() {
         </Link>
       </nav>
 
-      <main className={styles.main}>
+      <main className={styles.container}>
         <h1 className={styles.title}>Créer un groupe</h1>
 
         {session && (
@@ -84,6 +96,7 @@ export default function CreateGroup() {
               isMulti
               value={allUsers.filter((user) => userIds.includes(user.id)).map((user) => ({ value: user.id, label: user.name }))}
               onChange={handleChange}
+              styles={customStyles}
             />
 
             <button type="submit" className={styles.button}>Créer le groupe</button>

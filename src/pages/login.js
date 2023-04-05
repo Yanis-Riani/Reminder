@@ -23,13 +23,13 @@ export default function LoginPage({ providers }) {
           Liste des groupes
         </Link>
       </nav>
-      <div>
+      <main className={styles.container}>
         {Object.values(providers).map((provider) => (
           <div key={provider.name}>
             <button onClick={() => signIn(provider.id)} className={styles.button}>Sign in with {provider.name}</button>
           </div>
         ))}
-      </div>
+      </main>
     </div>
   );
 }

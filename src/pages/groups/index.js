@@ -56,7 +56,7 @@ export default function Groups() {
                   <h3>Vos Groupes</h3>
                   {groups.map((group) => (
                     <Link key={group.id} href={`/groups/${group.id}`} className={styles.linkcard}>
-                      <div className={styles.card}>
+                      <div>
                         <h3>{group.name}</h3>
                         <p>{group.reminders.length} rappel</p>
                       </div>

@@ -44,7 +44,7 @@ export default function Home() {
         </Link>
       </nav>
 
-      <main className={styles.main}>
+      <main className={styles.container}>
         <h1 className={styles.title}>
           Bienvenue sur Reminder
         </h1>
@@ -65,7 +65,7 @@ export default function Home() {
                 <h3>Vos Groupes</h3>
                 {groups.map((group) => (
                   <Link key={group.id} href={`/groups/${group.id}`} className={styles.linkcard}>
-                    <div className={styles.card}>
+                    <div>
                       <h3>{group.name}</h3>
                       <p>{group.reminders.length} rappel</p>
                     </div>

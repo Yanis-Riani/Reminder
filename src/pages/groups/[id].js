@@ -10,6 +10,18 @@ import Modal from 'react-modal';
 
 Modal.setAppElement('#__next');
 
+const customStyles = {
+  control: (provided) => ({
+    ...provided,
+    width: '100%',
+  }),
+  option: (provided, state) => ({
+    ...provided,
+    color: state.isSelected ? 'white' : 'black',
+    backgroundColor: state.isSelected ? 'black' : 'white',
+  }),
+};
+
 export default function Group() {
   const { data: session } = useSession();
   const [group, setGroup] = useState({});
@@ -25,27 +37,27 @@ export default function Group() {
   const router = useRouter();
   const { id } = router.query;
 
+  async function fetchData() {
+    try {
+      const res = await axios.get(`/api/group/${id}`);
+      setGroup(res.data);
+      setMembers(res.data.users);
+      setUserIds(res.data.users.map((user) => user.id));
+    } catch (err) {
+      console.error(err);
+    }
+  }
+
+  async function fetchUsers() {
+    try {
+      const res = await axios.get('/api/user/all');
+      setAllUsers(res.data);
+    } catch (err) {
+      console.error(err);
+    }
+  }
+
   useEffect(() => {
-    async function fetchData() {
-      try {
-        const res = await axios.get(`/api/group/${id}`);
-        setGroup(res.data);
-        setMembers(res.data.users);
-        setUserIds(res.data.users.map((user) => user.id));
-      } catch (err) {
-        console.error(err);
-      }
-    }
-
-    async function fetchUsers() {
-      try {
-        const res = await axios.get('/api/user/all');
-        setAllUsers(res.data);
-      } catch (err) {
-        console.error(err);
-      }
-    }
-
     if (session) {
       fetchData();
       fetchUsers();
@@ -71,6 +83,7 @@ export default function Group() {
       const res = await axios.put(`/api/group/${id}`, { userIds });
 
       setGroup(res.data);
+      fetchData();
     } catch (err) {
       console.error(err);
     }
@@ -86,6 +99,7 @@ export default function Group() {
           dueDate: new Date(dueDate).toISOString(),
           groupId: id,
         });
+        fetchData();
       } catch (err) {
       console.error(err);
     }
@@ -118,17 +132,26 @@ export default function Group() {
 
   async function handleUpdateReminderSubmit(e, reminderId) {
     e.preventDefault();
+    closeModal();
 
     try {
-      const res = await axios.put(`/api/reminder/${reminderId}`, {
-        title,
-        description,
-        dueDate: new Date(dueDate).toISOString(),
-      });
+      //Crée un objet qui contient les champs modifiés
+      const updatedReminder = {};
+      if (title !== '') {
+        updatedReminder.title = title;
+      }
+      if (description !== '') {
+        updatedReminder.description = description;
+      }
+      if (dueDate !== '') {
+        updatedReminder.dueDate = new Date(dueDate).toISOString();
+      }
+      const res = await axios.put(`/api/reminder/${reminderId}`, updatedReminder);
 
       setTitle('');
       setDescription('');
       setDueDate('');
+      fetchData();
     } catch (err) {
       console.error(err);
     }
@@ -178,7 +201,7 @@ export default function Group() {
   return (
     <div className={styles.container}>
       <Head>
-        <title>{group.name} - Remindr</title>
+        <title>{group.name}</title>
         <meta name="description" content={`Rappels pour le groupe ${group.name}`} />
       </Head>
 
@@ -191,7 +214,7 @@ export default function Group() {
         </Link>
       </nav>
 
-      <main className={styles.main}>
+      <main className={styles.container}>
         <h1 className={styles.title}>
           {group.name}
         </h1>
@@ -199,8 +222,13 @@ export default function Group() {
         {session && (
           <>
             {reminderId && (
+              <Modal
+              isOpen={modalIsOpen}
+              onRequestClose={closeModal}
+              className={styles.modal}
+              >
                 <form onSubmit={(e) => handleUpdateReminderSubmit(e, reminderId)} className={styles.card}>
-                  <h2>Modifier le rappel {reminderId}</h2>
+                  <h2>Modifier {group.reminders.find((reminder) => reminder.id === reminderId).title}</h2>
 
                   <label htmlFor="reminderTitle">Titre</label>
                   <input
@@ -208,6 +236,7 @@ export default function Group() {
                     id="reminderTitle"
                     value={title}
                     onChange={(e) => setTitle(e.target.value)}
+                    className={styles.input}
                   />
 
                   <label htmlFor="reminderDescription">Description</label>
@@ -216,6 +245,7 @@ export default function Group() {
                     id="reminderDescription"
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
+                    className={styles.input}
                   />
 
                   <label htmlFor="reminderDueDate">Date de fin</label>
@@ -224,11 +254,13 @@ export default function Group() {
                     id="reminderDueDate"
                     value={dueDate}
                     onChange={(e) => setDueDate(e.target.value)}
+                    className={styles.input}
                   />
 
                   <button type="submit" className={styles.button}>Enregistrer</button>
                   <button onClick={() => setReminderId(null)} className={styles.button}>Annuler</button>
                 </form>
+              </Modal>
           )}  
             {members.length > 0 && (
               <ul className={styles.ul}>
@@ -269,10 +301,11 @@ export default function Group() {
                   id="reminderTitle"
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
+                  className={styles.input}
                 />
 
                 <label htmlFor="reminderDescription">Description</label>
-                <input type="text" id="reminderDescription" value={description} onChange={(e) => setDescription(e.target.value)} />
+                <input type="text" id="reminderDescription" value={description} onChange={(e) => setDescription(e.target.value)} className={styles.input}/>
 
                 <label htmlFor="reminderDueDate">Date de fin</label>
                 <input
@@ -280,6 +313,7 @@ export default function Group() {
                   id="reminderDueDate"
                   value={dueDate}
                   onChange={(e) => setDueDate(e.target.value)}
+                  className={styles.input}
                 />
 
                 <button type="submit" className={styles.button}>Enregistrer</button>
@@ -294,6 +328,7 @@ export default function Group() {
                   id="newName"
                   value={newName}
                   onChange={(e) => setNewName(e.target.value)}
+                  className={styles.input}
                 />
 
                 <button type="submit" className={styles.button}>Valider</button>
@@ -302,13 +337,14 @@ export default function Group() {
 
             <form onSubmit={handleUserIdsChange}>
               <div className={styles.card}>
-                <label htmlFor="members">Modifier les membres</label>
+                <label htmlFor="members"><h2>Modifier les membres</h2></label>
                 <Select
                   id="members"
                   options={allUsers.map((user) => ({ value: user.id, label: user.name }))}
                   isMulti
                   value={allUsers.filter((user) => userIds.includes(user.id)).map((user) => ({ value: user.id, label: user.name }))}
                   onChange={handleChange}
+                  styles={customStyles}
                 />
 
                 <button type="submit" className={styles.button}>Valider</button>
